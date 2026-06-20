@@ -110,7 +110,7 @@ def calculate_eshop_status(my_stock, xml_stock):
 # ==================================================
 # 🗂️ SIDEBAR NAVIGATION
 # ==================================================
-str_app.sidebar.title("🚗 Carguy.gr Suite v3.0")
+str_app.sidebar.title("🚗 Carguy.gr Suite v3.1")
 str_app.sidebar.markdown("---")
 
 menu_choice = str_app.sidebar.radio(
@@ -193,8 +193,8 @@ elif menu_choice == "📦 Καθαρός Πίνακας Αποθήκης":
     
     if not df_global.empty:
         stock_cols = ['ID', 'Όνομα', 'Δικό μου Stock', 'Stock XML', 'Συνολικό Απόθεμα', 'Κατάσταση στο Eshop']
-        # Στυλ στον πίνακα αποθήκης
-        str_app.dataframe(df_global[stock_cols].style.background_gradient(subset=['Δικό μου Stock', 'Stock XML'], cmap='BuGn'), use_container_width=True)
+        # Διορθώθηκε το σφάλμα εδώ αφαιρώντας το background_gradient που δημιουργούσε πρόβλημα συμβατότητας
+        str_app.dataframe(df_global[stock_cols], use_container_width=True)
     else:
         str_app.info("Δεν υπάρχουν προϊόντα στην αποθήκη.")
 
@@ -218,10 +218,8 @@ elif menu_choice == "🔍 Ανάλυση Ρίσκου & Κερδοφορίας":
         filtered_df = df_global if selected_cat == 'Όλες' else df_global[df_global['Κατηγορία'] == selected_cat]
         
         str_app.subheader("📈 Πίνακας Κερδοφορίας & Παραπόνων")
-        analysis_cols = ['ID', 'Όνομα', 'Χονδρική (€)', 'Λιανική Αγοράς (€)', 'Ποσότητα Παραλαβής' if 'Ποσότητα Παραλαβής' in filtered_df else 'Δικό μου Stock', 'Ποσοστό Κέρδους (%)', 'Αρνητικές Κριτικές (%)']
         str_app.dataframe(filtered_df[['ID', 'Όνομα', 'Ποσοστό Κέρδους (%)', 'Αρνητικές Κριτικές (%)']], use_container_width=True)
         
-        # --- ΝΕΟ: ΚΕΛΙΑ ΠΙΘΑΝΩΝ ΠΡΟΣΦΟΡΩΝ ---
         str_app.markdown("---")
         str_app.subheader("💡 Έξυπνες Προτάσεις Προσφορών (Promo Opportunities)")
         
@@ -229,22 +227,19 @@ elif menu_choice == "🔍 Ανάλυση Ρίσκου & Κερδοφορίας":
         card_idx = 0
         
         for _, row in filtered_df.iterrows():
-            # Κριτήριο 1: Υψηλό δικό μου στοκ (θέλουμε να ξεστοκάρουμε)
             if row['Δικό μου Stock'] >= 5:
                 with col_cards[card_idx % 3]:
-                    str_app.info(f"🏷️ **Προσφορά Ξεστοκαρίσματος**\n\nΤο προϊόν **{row['Όνομα']}** έχει {row['Δικό μου Stock']} τμχ στο ράφι. Προτείνεται έκπτωση **10%-15%** για άμεση ρευστότητα.")
+                    str_app.info(f"🏷️ **Προσφορά Ξεστοκαρίσματος**\n\nΤο προϊόν **{row['Όνομα']}** έχει {row['Δικό μου Stock']} τμχ στο ράφι. Προτείνεται έκπτωση **10%-15%**.")
                 card_idx += 1
             
-            # Κριτήριο 2: Πολύ υψηλό περιθώριο κέρδους και χαμηλό ρίσκο
             if row['Ποσοστό Κέρδους (%)'] >= 100 and row['Αρνητικές Κριτικές (%)'] <= 15:
                 with col_cards[card_idx % 3]:
-                    str_app.success(f"🔥 **Ευκαιρία για Flash Sale**\n\nΤο προϊόν **{row['Όνομα']}** έχει τεράστιο κέρδος ({row['Ποσοστό Κέρδους (%)']}%) και ελάχιστα παράπονα. Τρέξε μια δυνατή προσφορά (π.χ. -20%) στο Eshop για να προσελκύσεις πελάτες!")
+                    str_app.success(f"🔥 **Ευκαιρία για Flash Sale**\n\nΤο προϊόν **{row['Όνομα']}** έχει τεράστιο κέρδος ({row['Ποσοστό Κέρδους (%)']}%) και λίγα παράπονα. Τρέξε ένα -20%!")
                 card_idx += 1
 
         if card_idx == 0:
             str_app.write("Δεν υπάρχουν προτάσεις προσφορών για τα τρέχοντα φίλτρα.")
             
-        # Αξιολόγηση ρίσκου
         str_app.markdown("---")
         str_app.subheader("⚠️ Αξιολόγηση Ποιότητας Προϊόντων")
         for _, row in filtered_df.iterrows():
